@@ -1,0 +1,168 @@
+openapi: '3.1.0'
+info:
+    title: Neptune Registry
+    version: 1.0.0
+servers:
+    - url: https://neptune.binarysky.ai/v2
+      description: Primary BinarySky deployment
+paths:
+    /:
+        get: # Add authorization in later version
+            summary: API version check
+            operationId: getApiVersion
+            responses:
+                '200':
+                    description: API version information.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                version:
+                                    type: string
+                                    example: '2.0'
+    /{repository}/manifests/{reference}:
+        head:
+            summary: Check if an image exists in the registry
+            operationId: existsImage
+            parameters:
+                - name: repository
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: Namespace of the repository
+                - name: reference
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: Either a manifest's digest or a tag
+            responses:
+                '200':
+                    description: Image exists on the registry
+                '404':
+                    description: Image could not be found in registry
+        get:
+            summary: Retrieve an image manifest
+            operationId: getManifest
+            parameters:
+                - name: repository
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: Namespace of the repository
+                - name: reference
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: Either a manifest's digest or a tag
+            responses:
+                '200':
+                    description: Requested manifest of image
+                    content:
+                        application/vnd.docker.distribution.manifest.v2+json:
+                            schema:
+                                $ref: '#/components/schemas/manifest'
+                '404':
+                    description: Image manifest not found
+    /{repository}/blobs/{digest}:
+        head:
+            summary: Check if a blob exists in the registry
+            operationId: existsBlob
+            parameters:
+                - name: repository
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: Namespace of the repository
+                - name: digest
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: The blob's digest for checking
+            responses:
+                '200':
+                    description: Blob exists on the registry
+                '404':
+                    description: Blob could not be found in registry
+        get:
+            summary: Retrieve a blob from an image
+            operationId: getBlob
+            parameters:
+                - name: repository
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: Namespace of the repository
+                - name: digest
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: The blob's digest for retrieval
+            responses:
+                '200':
+                    description: Request blob for an image
+                    # Figure out blob response type, just data?
+                '404':
+                    description: Image blob not found
+
+components:
+    schemas:
+        descriptor:
+            type: object
+            properties:
+                mediaType:
+                    type: string
+                digest:
+                    type: string
+                size:
+                    type: integer
+                urls:
+                    type: array
+                    items:
+                        type: string
+                annotations:
+                    type: object
+                    additionalProperties:
+                        type: string
+                data:
+                    type: string
+                artifactType:
+                    type: string
+            required:
+                - mediaType
+                - digest
+                - size
+        manifest:
+            type: object
+            properties:
+                schemaVersion:
+                    type: integer
+                mediaType:
+                    type: string
+                artifactType:
+                    type: string
+                config:
+                    $ref: '#/components/schemas/descriptor'
+                layers:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/descriptor'
+                subject:
+                    $ref: '#/components/schemas/descriptor'
+                annotations:
+                    type: object
+                    additionalProperties:
+                        type: string
+            required:
+                - schemaVersion
+                - config
+
+

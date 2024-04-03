@@ -14,7 +14,7 @@ struct Store {
     internal let blobLocation: URL
     internal let manifestLocation: URL
     
-    internal let logger = Logger(label: "GazouStore")
+    internal let logger = Logger(label: "Store")
     
     init(_ storeLocation: URL) throws {
         self.storeLocation = storeLocation

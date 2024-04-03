@@ -3,7 +3,7 @@ info:
     title: Neptune Registry
     version: 1.0.1
 servers:
-    - url: http://0.0.0.0:8080/v2
+    - url: http://127.0.0.1:8080/v2
       description: Testing Server Endpoint
 paths:
     /:

@@ -1,16 +1,23 @@
 import Foundation
 import OpenAPIRuntime
 import Crypto
+import Logging
 
 extension UploadHandler {
+    static let uploadLogger = Logger(label: "Upload")
+    
     func startUploadBlob(_ input: Operations.startUploadBlob.Input) async throws -> Operations.startUploadBlob.Output {
         let uuid = try store.createUploadFile()
         let location = server.appending(components: input.path.repository, "blobs", "upload", uuid.uuidString)
+
+        Self.uploadLogger.debug("Started upload session for \(input.path.repository) with location \(location.absoluteString)")
         
         return .accepted(.init(headers: .init(Location: location.absoluteString, Docker_hyphen_Upload_hyphen_UUID: uuid.uuidString)))
     }
     
     func continueUploadBlob(_ input: Operations.continueUploadBlob.Input) async throws -> Operations.continueUploadBlob.Output {
+        Self.uploadLogger.debug("Began upload for chunk on \(input.path.uuid)")
+        
         guard let uuid = UUID(uuidString: input.path.uuid),
               let body = input.body else { return .internalServerError(.init()) }
         
@@ -22,7 +29,9 @@ extension UploadHandler {
         
         var wrote = 0
         for try await data in binary { try file.write(contentsOf: data); wrote += 1 }
-        return .accepted(.init(headers: .init(
+        defer { Self.uploadLogger.debug("Finished upload for chunk on \(input.path.uuid) with \(wrote) bytes") }
+        
+        return .accepted(.init(headers: .init( // Something isn't working here
             Location: location.absoluteString,
             Docker_hyphen_Upload_hyphen_UUID: uuid.uuidString,
             Content_hyphen_Length: 0,
@@ -34,6 +43,7 @@ extension UploadHandler {
         guard let uuid = UUID(uuidString: input.path.uuid) else { return .internalServerError(.init()) }
         
         try store.commitUploadFile(with: uuid, to: input.query.digest)
+        Self.uploadLogger.info("Finished upload for blob \(uuid) on repository \(input.path.repository)")
         return .created(.init(headers: .init(
             Content_hyphen_Length: 0,
             Docker_hyphen_Content_hyphen_Digest: input.query.digest))

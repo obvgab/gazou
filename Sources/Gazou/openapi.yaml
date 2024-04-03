@@ -41,6 +41,11 @@ paths:
             responses:
                 '200':
                     description: Image/Manifest exists on the registry
+                    headers:
+                        Docker-Content-Digest:
+                            description: Relevant digest
+                            schema:
+                                type: string
                 '404':
                     description: Image/Manifest could not be found in registry
         get:
@@ -86,7 +91,7 @@ paths:
                       type: string
                   description: The blob's digest for checking
             responses:
-                '200':
+                '200': # Should also include the digest
                     description: Blob exists on the registry
                 '404':
                     description: Blob could not be found in registry
@@ -109,14 +114,124 @@ paths:
             responses:
                 '200':
                     description: Request blob for an image
+                    headers:
+                        Docker-Content-Digest:
+                            description: Relevant digest
+                            schema:
+                                type: string
                     content: # Switch to anyOf eventually when we support nondist and whatnot
-                        application/vnd.oci.image.layer.v1.tar+gzip:
+                        application/vnd.oci.image.layer.v1.tar+gzip: # Should also include the digest
                             schema:
                                 type: string
                                 format: binary
                 '404':
                     description: Image blob not found
-
+    /{repository}/blobs/uploads:
+        post:
+            summary: Begin uploading a chunked blob
+            operationId: startUploadBlob
+            parameters:
+                - name: repository
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: Namespace of the repository
+            responses: # Add unauthorized or not found
+                '202':
+                    description: Upload has begun with assigned UUID
+                    headers:
+                        Location:
+                            description: Path with UUID representing a unique session for uploading
+                            schema:
+                                type: string
+                        Docker-Upload-UUID:
+                            description: UUID assigned to upload operation
+                            schema:
+                                type: string # I think Swift treats UUIDs as strings not ints
+                '500':
+                    description: Failed to start upload session
+    /{repository}/blobs/upload/{uuid}:
+        patch:
+            summary: Upload segment of chunked blob
+            operationId: continueUploadBlob
+            parameters:
+                - name: repository
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: Namespace of the repository
+                - name: uuid
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: UUID for the upload session
+            requestBody:
+                description: Segment of the chunked blob
+                content:
+                    application/octet-stream:
+                        schema:
+                            type: string
+                            format: binary
+            responses: # Add unauthorized or not found
+                '202':
+                    description: Chunk has been uploaded successfully
+                    headers:
+                        Location:
+                            description: Path with UUID representing a unique session for uploading
+                            schema:
+                                type: string
+                        Docker-Upload-UUID:
+                            description: UUID assigned to upload operation
+                            schema:
+                                type: string # I think Swift treats UUIDs as strings not ints
+                        Content-Length:
+                            description: Content length of the current chunk
+                            schema:
+                                type: integer
+                        Content-Range:
+                            description: Range of bytes of the current chunk
+                            schema:
+                                type: string
+                '500':
+                    description: Failed to upload chunk
+        put:
+            summary: Complete upload of chunked blob
+            operationId: finishUploadBlob # Allow for final put to have chunk?
+            parameters:
+                - name: repository
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: Namespace of the repository
+                - name: uuid
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: UUID for the upload session
+                - name: digest
+                  in: query
+                  required: true
+                  schema:
+                     type: string
+                  description: Digest of the completed file
+            responses:
+                '201':
+                    description: Blob has been sucessfully uploaded
+                    headers:
+                        Content-Length:
+                            description: Content length of the current chunk
+                            schema:
+                                type: integer
+                        Docker-Content-Digest:
+                            description: Relevant digest
+                            schema:
+                                type: string
+                    
 components:
     schemas:
         descriptor:

@@ -9,7 +9,8 @@ let package = Package(
         .package(url: "https://github.com/hummingbird-project/hummingbird", from: "2.0.0-beta.1"),
         .package(url: "https://github.com/apple/swift-openapi-runtime.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-openapi-generator", from: "1.0.0"),
-        .package(url: "https://github.com/swift-server/swift-openapi-hummingbird", branch: "2.x.x")
+        .package(url: "https://github.com/swift-server/swift-openapi-hummingbird", branch: "2.x.x"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.3.0")
     ],
     targets: [
         .executableTarget(
@@ -18,7 +19,8 @@ let package = Package(
                 .product(name: "Plot", package: "plot"),
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
-                .product(name: "OpenAPIHummingbird", package: "swift-openapi-hummingbird")
+                .product(name: "OpenAPIHummingbird", package: "swift-openapi-hummingbird"),
+                .product(name: "Crypto", package: "swift-crypto")
             ],
             // GeneratedSources are good for non-Xcode IDEs
             // just make sure to run `swift package plugin generate-code-from-openapi` first

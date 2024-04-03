@@ -3,8 +3,8 @@ info:
     title: Neptune Registry
     version: 1.0.1
 servers:
-    - url: /v2
-      description: Current server endpoint
+    - url: http://0.0.0.0:8080/v2
+      description: Testing Server Endpoint
 paths:
     /:
         get: # Add authorization in later version
@@ -231,7 +231,8 @@ paths:
                             description: Relevant digest
                             schema:
                                 type: string
-                    
+                '500':
+                    description: Failed to finish upload
 components:
     schemas:
         descriptor:

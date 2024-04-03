@@ -32,11 +32,25 @@ struct Store {
     func asyncBlobFile(for digest: String) throws -> FileHandle.AsyncBytes {
         try FileHandle(forReadingFrom: blobLocation.appending(path: digest)).bytes
     }
+    
+    func createUploadFile(with uuid: UUID = UUID()) throws -> UUID {
+        try "".write(to: uploadLocation.appending(path: uuid.uuidString), atomically: true, encoding: .utf8)
+        return uuid
+    }
+    
+    func acquireUploadFile(with uuid: UUID) throws -> FileHandle {
+        try FileHandle(forWritingTo: uploadLocation.appending(path: uuid.uuidString))
+    }
+    
+    func commitUploadFile(with uuid: UUID, to digest: String) throws {
+        try FileManager.default.moveItem(at: uploadLocation.appending(path: uuid.uuidString), to: blobLocation.appending(path: digest))
+    }
 }
 
 extension Handler {
-    init?(location: URL? = nil) {
+    init?(location: URL? = nil, server: URL) {
         guard let store = try? Store(location ?? .currentDirectory().appending(path: "registry")) else { return nil }
         self.store = store
+        self.server = server
     }
 }

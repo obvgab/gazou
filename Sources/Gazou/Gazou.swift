@@ -1,4 +1,5 @@
 import Hummingbird
+import Foundation
 import OpenAPIRuntime
 import OpenAPIHummingbird
 import Logging
@@ -9,16 +10,20 @@ struct Gazou {
     
     public static func main() async throws {
         let router = Router()
+        let server = try Servers.server1()
         
-        if let handler = Handler() {
-            try handler.registerHandlers(on: router)
+        if let handler = Handler(server: server) {
+            try handler.registerHandlers(on: router, serverURL: server)
         }
 
-        try await Application(router: router, configuration: .init(address: .hostname("0.0.0.0", port: 8080))).run()
+        try await Application(router: router, configuration: .init(
+            address: .hostname(server.host(percentEncoded: false)!,
+                               port: server.port!))
+        ).run()
     }
 }
 
-struct Handler: APIProtocol { let store: Store }
+struct Handler: APIProtocol { let store: Store; let server: URL }
 typealias BlobHandler = Handler
 typealias ManifestHandler = Handler
 typealias UploadHandler = Handler

@@ -1,10 +1,10 @@
 openapi: '3.1.0'
 info:
     title: Neptune Registry
-    version: 1.0.0
+    version: 1.0.1
 servers:
-    - url: https://neptune.binarysky.ai/v2
-      description: Primary BinarySky deployment
+    - url: /v2
+      description: Current server endpoint
 paths:
     /:
         get: # Add authorization in later version
@@ -23,8 +23,8 @@ paths:
                                     example: '2.0'
     /{repository}/manifests/{reference}:
         head:
-            summary: Check if an image exists in the registry
-            operationId: existsImage
+            summary: Check if an image/manifest exists in the registry
+            operationId: existsManifest
             parameters:
                 - name: repository
                   in: path
@@ -40,9 +40,9 @@ paths:
                   description: Either a manifest's digest or a tag
             responses:
                 '200':
-                    description: Image exists on the registry
+                    description: Image/Manifest exists on the registry
                 '404':
-                    description: Image could not be found in registry
+                    description: Image/Manifest could not be found in registry
         get:
             summary: Retrieve an image manifest
             operationId: getManifest
@@ -63,7 +63,7 @@ paths:
                 '200':
                     description: Requested manifest of image
                     content:
-                        application/vnd.docker.distribution.manifest.v2+json:
+                        application/vnd.oci.image.manifest.v1+json:
                             schema:
                                 $ref: '#/components/schemas/manifest'
                 '404':
@@ -109,7 +109,11 @@ paths:
             responses:
                 '200':
                     description: Request blob for an image
-                    # Figure out blob response type, just data?
+                    content: # Switch to anyOf eventually when we support nondist and whatnot
+                        application/vnd.oci.image.layer.v1.tar+gzip:
+                            schema:
+                                type: string
+                                format: binary
                 '404':
                     description: Image blob not found
 

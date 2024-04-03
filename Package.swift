@@ -20,6 +20,9 @@ let package = Package(
                 .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
                 .product(name: "OpenAPIHummingbird", package: "swift-openapi-hummingbird")
             ],
+            // GeneratedSources are good for non-Xcode IDEs
+            // just make sure to run `swift package plugin generate-code-from-openapi` first
+            exclude: ["GeneratedSources/"],
             plugins: [
                 .plugin(name: "OpenAPIGenerator", package: "swift-openapi-generator")
             ])

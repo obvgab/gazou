@@ -18,9 +18,9 @@ struct Store {
     
     init(_ storeLocation: URL) throws {
         self.storeLocation = storeLocation
-        self.uploadLocation = storeLocation.appending(path: "upload")
-        self.blobLocation = storeLocation.appending(path: "blobs")
-        self.manifestLocation = storeLocation.appending(path: "manifests")
+        self.uploadLocation = storeLocation.appending(component: "upload")
+        self.blobLocation = storeLocation.appending(component: "blobs")
+        self.manifestLocation = storeLocation.appending(component: "manifests")
         
         try [uploadLocation, blobLocation, manifestLocation].forEach { storage in
             try FileManager.default.createDirectory(at: storage, withIntermediateDirectories: true)
@@ -32,7 +32,7 @@ struct Store {
 
 extension Handler {
     init?(location: URL? = nil, server: URL) {
-        guard let store = try? Store(location ?? .currentDirectory().appending(path: "registry")) else { return nil }
+        guard let store = try? Store(location ?? .currentDirectory().appending(component: "registry")) else { return nil }
         self.store = store
         self.server = server
     }

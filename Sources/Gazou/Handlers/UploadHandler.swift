@@ -43,7 +43,7 @@ extension UploadHandler {
 extension Store {
     func createUploadFile(with uuid: UUID = UUID()) throws -> UUID {
         // Using this method because it can throw and doesn't require changing the URL into a string
-        try "".write(to: uploadLocation.appending(path: uuid.uuidString), atomically: true, encoding: .utf8)
+        try "".write(to: uploadLocation.appending(component: uuid.uuidString), atomically: true, encoding: .utf8)
         return uuid
     }
     
@@ -52,6 +52,6 @@ extension Store {
     }
     
     func commitUploadFile(with uuid: UUID, to digest: String) throws {
-        try FileManager.default.moveItem(at: uploadLocation.appending(path: uuid.uuidString), to: blobLocation.appending(path: digest))
+        try FileManager.default.moveItem(at: uploadLocation.appending(component: uuid.uuidString), to: blobLocation.appending(component: digest))
     }
 }

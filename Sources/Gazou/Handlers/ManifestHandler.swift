@@ -22,19 +22,19 @@ extension Store {
     static let jsonEncoder = JSONEncoder()
     
     func namespaceManifest(_ repository: String) throws -> URL {
-        let url = manifestLocation.appending(path: repository)
+        let url = manifestLocation.appending(component: repository)
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         
         return url
     }
     
     func existsManifest(_ repository: String, tagged reference: String) -> Bool {
-        let location = manifestLocation.appending(path: repository)
+        let location = manifestLocation.appending(component: repository)
         return FileManager.default.fileExists(atPath: location.appending(path: reference).path(percentEncoded: false))
     }
     
     func pullManifest(_ repository: String, tagged reference: String) throws -> Manifest {
-        let location = manifestLocation.appending(path: repository)
+        let location = manifestLocation.appending(component: repository)
         return try Self.jsonDecoder.decode(Manifest.self, from: Data(contentsOf: location))
     }
     

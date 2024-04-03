@@ -33,7 +33,12 @@ struct Store {
         try FileHandle(forReadingFrom: blobLocation.appending(path: digest)).bytes
     }
     
+    func existsBlobFile(for digest: String) -> Bool {
+        FileManager.default.fileExists(atPath: blobLocation.appending(path: digest).path(percentEncoded: false))
+    }
+    
     func createUploadFile(with uuid: UUID = UUID()) throws -> UUID {
+        // Using this method because it can throw and doesn't require changing the URL into a string
         try "".write(to: uploadLocation.appending(path: uuid.uuidString), atomically: true, encoding: .utf8)
         return uuid
     }

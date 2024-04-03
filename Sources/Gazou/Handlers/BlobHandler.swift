@@ -13,6 +13,10 @@ extension BlobHandler {
     }
     
     func existsBlob(_ input: Operations.existsBlob.Input) async throws -> Operations.existsBlob.Output {
-        fatalError("Not done yet")
+        return if store.existsBlobFile(for: input.path.digest) {
+            .ok(.init())
+        } else {
+            .notFound(.init())
+        }
     }
 }

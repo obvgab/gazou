@@ -1,5 +1,6 @@
 import Foundation
 import OpenAPIRuntime
+import Crypto
 
 extension UploadHandler {
     func startUploadBlob(_ input: Operations.startUploadBlob.Input) async throws -> Operations.startUploadBlob.Output {
@@ -38,6 +39,18 @@ extension UploadHandler {
             Docker_hyphen_Content_hyphen_Digest: input.query.digest))
         )
     }
+    
+    func uploadManifest(_ input: Operations.uploadManifest.Input) async throws -> Operations.uploadManifest.Output {
+        guard let body = input.body else { return .internalServerError(.init()) }
+        
+        let manifest: Manifest
+        switch body { case .application_vnd_period_oci_period_image_period_manifest_period_v1_plus_json(let json): manifest = json }
+        
+        let digest = try store.uploadManifest(input.path.repository, tagged: input.path.reference, manifest: manifest)
+        let location = server.appending(components: input.path.repository, "manifests", input.path.reference)
+        
+        return .created(.init(headers: .init(Location: location.absoluteString, Docker_hyphen_Content_hyphen_Digest: digest)))
+    }
 }
 
 extension Store {
@@ -53,5 +66,23 @@ extension Store {
     
     func commitUploadFile(with uuid: UUID, to digest: String) throws {
         try FileManager.default.moveItem(at: uploadLocation.appending(component: uuid.uuidString), to: blobLocation.appending(component: digest))
+    }
+    
+    func uploadManifest(_ repository: String, tagged reference: String, manifest: Manifest) throws -> String {
+        let location = try namespaceManifest(repository)
+        let tagLocation = location.appending(component: reference)
+        
+        let json = try Self.jsonEncoder.encode(manifest)
+        let digest = SHA256.hash(data: json).compactMap { String(format: "%02x", $0) }.joined()
+        let digestLocation = location.appending(component: digest)
+        
+        if !FileManager.default.fileExists(atPath: digestLocation.path(percentEncoded: false)) {
+            try json.write(to: digestLocation)
+        }
+        
+        try FileManager.default.removeItem(at: tagLocation)
+        try FileManager.default.createSymbolicLink(at: tagLocation, withDestinationURL: digestLocation)
+        
+        return digest
     }
 }

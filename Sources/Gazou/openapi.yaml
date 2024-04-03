@@ -73,6 +73,45 @@ paths:
                                 $ref: '#/components/schemas/manifest'
                 '404':
                     description: Image manifest not found
+        put:
+            summary: Push an image manifest
+            operationId: uploadManifest
+            parameters:
+                - name: repository
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: Namespace of the repository
+                - name: reference
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: Either a manifest's digest or a tag
+            requestBody:
+                description: JSON encoded manifest for an image
+                content:
+                    application/vnd.oci.image.manifest.v1+json:
+                        schema:
+                            $ref: '#/components/schemas/manifest'
+            responses:
+                '201':
+                    description: Manifest sucessfully uploaded
+                    headers:
+                        Location:
+                            description: Path representing the uploaded manifest
+                            schema:
+                                type: string
+                        Docker-Content-Digest:
+                            description: Digest of the uploaded manifest
+                            schema:
+                                type: string
+                '400':
+                    description: Manifest improperly formatted
+                '500':
+                    description: Manifest could not be uploaded
+                    
     /{repository}/blobs/{digest}:
         head:
             summary: Check if a blob exists in the registry

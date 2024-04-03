@@ -12,7 +12,7 @@ paths:
             operationId: getApiVersion
             responses:
                 '200':
-                    description: API version information.
+                    description: API version information
                     content:
                         application/json:
                             schema:

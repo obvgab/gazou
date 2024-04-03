@@ -20,3 +20,13 @@ extension BlobHandler {
         }
     }
 }
+
+extension Store {
+    func asyncBlobFile(for digest: String) throws -> FileHandle.AsyncBytes {
+        try FileHandle(forReadingFrom: blobLocation.appending(path: digest)).bytes
+    }
+    
+    func existsBlobFile(for digest: String) -> Bool {
+        FileManager.default.fileExists(atPath: blobLocation.appending(path: digest).path(percentEncoded: false))
+    }
+}
